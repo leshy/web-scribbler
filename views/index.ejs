@@ -1,0 +1,190 @@
+
+
+
+<script type="text/javascript">
+
+function insertsource(source) {
+    console.log("inserting ", source)
+    entry = $("#sourceentry").clone()
+    
+
+    $("#name",entry).append(source.name)
+    $("#size",entry).html(source.size + " bytes")
+
+    var sliderval = $("#sliderval",entry)
+    $("#slider",entry ).slider({
+	value: 100,
+	min: 0,
+	max: 100,
+	slide: function( event, ui ) {
+
+	    sliderval.html(ui.value + "%")
+	    
+	}
+	
+    })
+
+    $("#edit",entry ).click(function() { editsource(source) })
+    $("#delete",entry ).click(function() { delsource(source) })
+    $("#sources").append(entry)
+    $("#generate",entry ).click(function() { generatesource(source) })
+
+
+}
+
+function delsource(source) {
+    console.log(source._id)
+    $.post("/ajax/delsource", {_id: source._id}, function(data) {reloadsourcelist()})
+}
+
+
+function generatesource(source) {
+    console.log(source._id)
+    $("#output").html("generating...")
+    $.post("/ajax/generate", {_id: source._id}, function(data) {$("#output").html(data)})
+}
+
+
+function reloadsourcelist() {
+    console.log("reloading sources list...")
+    $("#sources").html("")
+    $.get("/ajax/sources", function(data) {
+	console.log(data)
+	data.forEach(function(source) { insertsource(source)} )
+    })
+
+}
+
+function editsource(source) {
+
+
+    var editdialog = $("#editdialog")
+    console.log(source)
+    if (source) {
+	$("#title",editdialog).html("edit " + source.name)
+	$("#data",editdialog).val("loading...")
+	$.post("ajax/source",{_id:source._id}, function(data) { source.data = data.data; $("#data",editdialog).val(source.data) })
+	$("#name",editdialog).val(source.name)
+    } else {
+	$("#title",editdialog).html("new base")
+	$("#data",editdialog).val("")
+	$("#name",editdialog).val("")
+
+    }
+
+    editdialog.show()
+
+    editdialog.dialog({
+	height:650,
+	width:700,
+	modal: true
+    })
+
+    $("#save",editdialog).unbind()
+
+    $("#save",editdialog).click(function(){
+	data = {}
+	data.name = $("#name",editdialog).val()
+	data.data = $("#data",editdialog).val()
+	
+	if(source) {
+	    data._id = source._id
+	}
+
+	$.post("/ajax/writesource", data, function (data) { console.log("GOT",data); reloadsourcelist() })
+
+
+	editdialog.dialog("close")
+
+    })
+
+
+
+}
+
+
+$(document).ready(function() { 
+    reloadsourcelist()
+
+    $("#editdialog").hide()
+//    $("#cancel").click(function(){$("#editdialog").hide()})
+	
+    $("#cancel").click(function(){$("#editdialog").dialog("close")})
+    $("#new").click(function() {editsource()})
+
+
+    $("#generate").click(function() {
+	$("#output").html ("generating...")
+	$.post("/ajax/generate", {lala:1}, function(data) { console.log("GOT",data); $("#output").html(data) })
+    })
+
+
+})
+
+</script>
+<div style="display:none">
+  <div id="sourceentry">
+    <table>
+    <tr>
+      <td width="200">
+	<div id="name"></div>
+      </td>
+    <td width="10"></td>
+      <td>
+	<button id="edit">edit</button>
+	<button id="delete">delete</button>
+      </td>
+    <td width="10"></td>
+      <td width="300">
+	<div id="slider"></div>
+      </td>
+    <td width="10"></td>
+      <td width="20" >
+	<div id="sliderval">100%</div>
+      </td>
+    <td width="10"></td>
+      <td>
+<!--	<div id="size">0 bytes</div> -->
+    <button id="generate">generate</button>
+      </td>
+
+    </tr>
+    </table>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div id="sources">
+
+</div>
+
+
+<hr>
+
+<div id="editdialog">
+    <h3><div id="title">title</div></h3>
+    <input type="text" id="name"></text>
+    <br>
+    <textarea id="data" rows="20" cols="70"></textarea>
+    <br>
+    <button id="cancel">cancel</button><button id="save">save</button>
+</div>
+
+<button id="new">new base</button>
+<!-- <button id="generate">generate text</button> -->
+
+<hr>
+
+<div id="output"></div>
