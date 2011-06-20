@@ -80,8 +80,7 @@ app.post('/ajax/generate', function(req, res){
 	    res.send(data)
 	})
     })
-
-});
+})
 
 
 app.get('/ajax/sources', function(req, res){
@@ -136,8 +135,8 @@ app.post('/ajax/delsource', function(req,res) {
 
 function getsources (callback) {
     db.collection("sources", function(err,collection) {   
-	collection.find({},function(err,cursor) {
-	    cursor.toArray(function(error,docs) {callback(docs) })
+	collection.find({}, {_id:1,name:1,size:1},function(err,cursor) {
+	    cursor.toArray(function(error,docs) {  callback(docs) })
 	})	
     })
 }

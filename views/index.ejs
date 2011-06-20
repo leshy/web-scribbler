@@ -13,7 +13,7 @@ function insertsource(source) {
 
     var sliderval = $("#sliderval",entry)
     $("#slider",entry ).slider({
-	value: 100,
+	value: 0,
 	min: 0,
 	max: 100,
 	slide: function( event, ui ) {
@@ -45,12 +45,14 @@ function generatesource(source) {
 }
 
 
-function reloadsourcelist() {
+function reloadsourcelist(callback) {
     console.log("reloading sources list...")
-    $("#sources").html("")
+    $("#sources").html("<blink>Loading...</blink>")
     $.get("/ajax/sources", function(data) {
 	console.log(data)
+	$("#sources").html("")
 	data.forEach(function(source) { insertsource(source)} )
+	if (callback) {callback()}
     })
 
 }
@@ -62,7 +64,7 @@ function editsource(source) {
     console.log(source)
     if (source) {
 	$("#title",editdialog).html("edit " + source.name)
-	$("#data",editdialog).val("loading...")
+	$("#data",editdialog).val("Loading...")
 	$.post("ajax/source",{_id:source._id}, function(data) { source.data = data.data; $("#data",editdialog).val(source.data) })
 	$("#name",editdialog).val(source.name)
     } else {
@@ -104,7 +106,10 @@ function editsource(source) {
 
 
 $(document).ready(function() { 
-    reloadsourcelist()
+    reloadsourcelist(function() {
+	$("#controls").fadeIn(1000)
+
+    })
 
     $("#editdialog").hide()
 //    $("#cancel").click(function(){$("#editdialog").hide()})
@@ -140,7 +145,7 @@ $(document).ready(function() {
       </td>
     <td width="10"></td>
       <td width="20" >
-	<div id="sliderval">100%</div>
+	<div id="sliderval">0%</div>
       </td>
     <td width="10"></td>
       <td>
@@ -167,24 +172,28 @@ $(document).ready(function() {
 
 
 <div id="sources">
-
+need javascript to work.
 </div>
 
 
+<div id="controls" style="display:none">
+<hr>
+<button id="new">new base</button>
+<button id="globalgenerate">generate</button>
+<button id="globalzero">0%</button>
+
 <hr>
 
+<div id="output"></div>
+</div>
+
+
 <div id="editdialog">
-    <h3><div id="title">title</div></h3>
+    <center><div id="title">title</div></center>
+    <br>
     <input type="text" id="name"></text>
     <br>
     <textarea id="data" rows="20" cols="70"></textarea>
     <br>
     <button id="cancel">cancel</button><button id="save">save</button>
 </div>
-
-<button id="new">new base</button>
-<!-- <button id="generate">generate text</button> -->
-
-<hr>
-
-<div id="output"></div>
