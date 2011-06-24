@@ -1,110 +1,142 @@
-
 function trim(data) {
     return data.replace(/^\s+|\s+$/g, '')
 }
 
-
 function extractwords(data) {
     var words = data.replace(/\./g, ' . ')
     words = words.replace(/\,/g, ' , ')
-
-    data = data.replace('/  /g', ' ')
-
     words = ". " + words + " ."
 
     words = words.split(" ")
     words = words.map(trim)
-    console.log("GOT",words)
+    words = words.filter(function(word) { if ( word == "" ) { return false } return true })
     return words
 }
 
-
-function buildgraph(data) {
-    var graph = { ids: { 1: ".", 2: "-"}, idslen: 2, links: {}}
+function buildgraph(data,ids) {
+    var graph = {}
 
     var data = extractwords(data)
-
-    //data = data.reverse()
-
     var lastword = null    
     while (true) {
-//	console.log("data: ", data)
 	var word = data.pop()
-	if (word == undefined) { return graph }
+	if (word == undefined) { return [graph,ids] }
 
-	console.log(" - ", word)
-	var id = wordid(word,graph)
+	var id = wordid(word,ids)
 
-	if (lastword) { addlink(id,lastword,graph) }
+	if (lastword != null) { addlink(id,lastword,graph) }
 
 	lastword = id
     }
 }
 
-
 function addlink(id1,id2,graph) {
-    if (!graph.links[id1]) {
-	graph.links[id1] = []
+    if (!graph[id1]) {
+	graph[id1] = {}
     }
 
-    console.log("linking",graph.ids[id1] ,"->",graph.ids[id2])
-    graph.links[id1].push(id2)
-
+    if (graph[id1][id2]) { 
+	graph[id1][id2] ++;
+    } else {
+	graph[id1][id2] = 1
+    }
 }
 
-function wordid(word,graph)  {
+function wordid(word,ids)  {
 
-    for (id in graph.ids) {
-	if (graph.ids[id] == word) { return parseInt(id) }
+    for (id in ids) {
+	if (ids[id] == word) { return parseInt(id) }
     }
     
-    console.log("new word",word)
-    graph.idslen = graph.idslen + 1
-    graph.ids[graph.idslen] = word
-    return graph.idslen
-    
+    console.log(word)
+    var newid = ids.length
+    ids.push(word)
+    return newid
 }
 
+function pickone(entry) {
 
+    var range = 0
 
+    for (x in entry) {
+	range += entry[x];
+    }
 
-function pickone(array) {
-    return array[Math.floor(Math.random() * array.length)];
+    var r=Math.floor(Math.random()*range)
+
+    for (x in entry) {
+	r -= entry[x];
+	if (r < 0) { return x }
+    }
 }
 
-function sentance(graph) {
-    var current = 1
+function sentance(graph,ids) {
+    var current = 0
     var sentance = ""
     while (true) {
-	current = pickone(graph.links[current])
-	sentance = sentance + " " + graph.ids[current]
-	console.log("JUMP: ",graph.ids[current])
-	if (current == 1) { return postprocess(sentance) }
-    }
+	current = pickone(graph[current])
+	sentance = sentance + " " + ids[current]
+	if (current == 0) { return postprocess(sentance) }
+}}
+
+function apply_modifier(entry,modifier) {
+    for (x in entry) { entry[x] *= modifier }
+    return entry
 }
+
+function joingraphentry(entry1,entry2) {
+    for (x in entry2) {
+	if (entry1[x]) { entry1[x] += entry2[x] } else { entry1[x] = entry2[x] }
+    }
+    return entry1
+}
+
+// [ { graph: graph1, value: value1 }, {graph: graph2 , value: value2}, ... ]
+function multisentance(graphlist,ids) {
+
+    var current = 0
+    var sentance = ""
+
+// { 0 : { 1 : 7 }. { 2 : 2 }}
+
+    while (true) {
+	var entry = []
+	for (i in graphlist) {
+	    var graph = graphlist[i]
+	    if (graph.graph[current]) {
+		entry = joingraphentry(entry,apply_modifier(graph.graph[current],graph.value))
+	    }
+	}
+
+	current = pickone(entry)
+	sentance = sentance + " " + ids[current]
+	if (current == 0) { return postprocess(sentance) }
+}}
 
 function postprocess(sentance) {
     sentance = sentance.replace(/ , /g, ', ')
-    sentance = sentance.replace(/ . /g, '. ')
-
-
-//    sentance = sentance.replace(' . ', ' * END * ')
-//    sentance = sentance.replace(' ,', ',')
     return sentance
 }
-
 
 module.exports.buildgraph = buildgraph
 module.exports.sentance = sentance
 
+data1 = "ivan ide u ducan."
+data2 = "anja ide u skolu. anja ide u ludnicu."
 
-//data = "ivan ide u ducan. anja ide u skolu"
+var ids = [ ".","," ]
+var graph1 = {}
+var graph2 = {}
 
-//var graph = buildgraph(data)
+var ret = buildgraph(data1,ids)
+ids = ret[1]
+graph1 = ret[0]
 
-//console.log(graph)
+var ret = buildgraph(data2,ids)
+graph2 = ret[0]
 
-//console.log(sentance(graph))
-//console.log(sentance(graph))
-//console.log(sentance(graph))
-//console.log(sentance(graph))
+//console.log(multisentance([{ graph: graph1, value: 3 }, {graph: graph2, value:1 } ],ids))
+
+console.log(ids)
+console.log(graph1)
+console.log(graph2)

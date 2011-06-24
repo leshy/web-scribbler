@@ -70,7 +70,38 @@ app.get('/', function(req, res){
 });
 
 
-app.post('/ajax/generate', function(req, res){
+app.post('/ajax/generatemulti', function(req, res) {
+
+
+    db.collection("scribbler", function(err,collection) {
+	collection.findOne({'ids': { "$exists" : true } }, function(err, ids) {
+
+
+	    for (graphid in req.body.bases) {
+		collection.findOne({'_id': new BSON.ObjectID (req.body._id)}, function (err,doc))
+	    }
+
+	    { graphid: value, graphid: value }	    
+	    scribbler.multisentance
+	    
+	})
+    })
+})
+
+app.post('/ajax/upgrade', function(req, res) {
+    db.collection("sources", function(err,collection) {   
+	collection.findOne({'_id': new BSON.ObjectID (req.body._id) }, function(err, doc) {
+	    var data = ""
+	    for (x=0;x<10;x++) {
+		data = data + scribbler.sentance(doc.graph) + "<br>"
+	    }
+	    res.send(data)
+	})
+    })
+})
+
+
+app.post('/ajax/generate', function(req, res) {
     db.collection("sources", function(err,collection) {   
 	collection.findOne({'_id': new BSON.ObjectID (req.body._id) }, function(err, doc) {
 	    var data = ""
@@ -89,8 +120,6 @@ app.get('/ajax/sources', function(req, res){
     })
 });
 
-
-
 app.post('/ajax/source', function(req, res){
     db.collection("sources", function(err,collection) {   
 	collection.findOne({'_id': new BSON.ObjectID (req.body._id)}, function(err, doc) {
@@ -102,7 +131,6 @@ app.post('/ajax/source', function(req, res){
 	})
     })
 });
-
 
 app.post('/ajax/writesource', function(req, res){
     if (!req.body.data) { return }
@@ -120,18 +148,11 @@ app.post('/ajax/writesource', function(req, res){
     })
 });
 
-
 app.post('/ajax/delsource', function(req,res) {
     db.collection("sources", function(err,collection) {   
 	collection.remove({'_id': new BSON.ObjectID (req.body._id)}, function(err, doc) {res.send(jsonmsg("ok",1))})
     })
 })
-
-
-
-
-
-
 
 function getsources (callback) {
     db.collection("sources", function(err,collection) {   
