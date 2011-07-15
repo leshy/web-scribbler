@@ -3,124 +3,144 @@
 
 <script type="text/javascript">
 
-function insertsource(source) {
-    console.log("inserting ", source)
-    entry = $("#sourceentry").clone()
-    
-
-    $("#name",entry).append(source.name)
-    $("#size",entry).html(source.size + " bytes")
-
-    var sliderval = $("#sliderval",entry)
-    $("#slider",entry ).slider({
-	value: 0,
-	min: 0,
-	max: 100,
-	slide: function( event, ui ) {
-
-	    sliderval.html(ui.value + "%")
-	    
-	}
-	
-    })
-
-    $("#edit",entry ).click(function() { editsource(source) })
-    $("#delete",entry ).click(function() { delsource(source) })
-    $("#sources").append(entry)
-    $("#generate",entry ).click(function() { generatesource(source) })
-
-
-}
-
-function delsource(source) {
-    console.log(source._id)
-    $.post("/ajax/delsource", {_id: source._id}, function(data) {reloadsourcelist()})
-}
-
-
-function generatesource(source) {
-    console.log(source._id)
-    $("#output").html("generating...")
-    $.post("/ajax/generate", {_id: source._id}, function(data) {$("#output").html(data)})
-}
-
-
-function reloadsourcelist(callback) {
-    console.log("reloading sources list...")
-    $("#sources").html("<blink>Loading...</blink>")
-    $.get("/ajax/sources", function(data) {
-	console.log(data)
-	$("#sources").html("")
-	data.forEach(function(source) { insertsource(source)} )
-	if (callback) {callback()}
-    })
-
-}
-
-function editsource(source) {
-
-
-    var editdialog = $("#editdialog")
-    console.log(source)
-    if (source) {
-	$("#title",editdialog).html("edit " + source.name)
-	$("#data",editdialog).val("Loading...")
-	$.post("ajax/source",{_id:source._id}, function(data) { source.data = data.data; $("#data",editdialog).val(source.data) })
-	$("#name",editdialog).val(source.name)
-    } else {
-	$("#title",editdialog).html("new base")
-	$("#data",editdialog).val("")
-	$("#name",editdialog).val("")
-
-    }
-
-    editdialog.show()
-
-    editdialog.dialog({
-	height:650,
-	width:700,
-	modal: true
-    })
-
-    $("#save",editdialog).unbind()
-
-    $("#save",editdialog).click(function(){
-	data = {}
-	data.name = $("#name",editdialog).val()
-	data.data = $("#data",editdialog).val()
-	
-	if(source) {
-	    data._id = source._id
-	}
-
-	$.post("/ajax/writesource", data, function (data) { console.log("GOT",data); reloadsourcelist() })
-
-
-	editdialog.dialog("close")
-
-    })
-
-
-
-}
-
 
 $(document).ready(function() { 
-    reloadsourcelist(function() {
+    var sources = []
+    
+    reloadsourcelist(function(s) { 
+	sources = s
 	$("#controls").fadeIn(1000)
 
     })
 
-    $("#editdialog").hide()
-//    $("#cancel").click(function(){$("#editdialog").hide()})
+
+
+    function insertsource(source) {
+	console.log("inserting ", source)
+	entry = $("#sourceentry").clone()
 	
+
+	$("#name",entry).append(source.name)
+	$("#size",entry).html(source.size + " bytes")
+
+	var sliderval = $("#sliderval",entry)
+	$("#slider",entry ).slider({
+	    value: 0,
+	    min: 0,
+	    max: 100,
+	    slide: function( event, ui ) {
+
+		sliderval.html(ui.value + "%")
+		
+	    }
+	    
+	})
+
+	$("#slider",entry).attr("id","slider-" + source._id)
+
+	$("#edit",entry ).click(function() { editsource(source) })
+	$("#delete",entry ).click(function() { delsource(source) })
+	$("#sources").append(entry)
+	$("#generate",entry ).click(function() { generatesource(source) })
+
+
+    }
+
+    function delsource(source) {
+	console.log(source._id)
+	$.post("/ajax/delsource", {_id: source._id}, function(data) {reloadsourcelist()})
+    }
+
+
+    function generatesource(source) {
+	console.log(source._id)
+	$("#output").html("generating...")
+	$.post("/ajax/generate", {_id: source._id}, function(data) {$("#output").html(data)})
+    }
+
+
+    function reloadsourcelist(callback) {
+	console.log("reloading sources list...")
+	$("#sources").html("<blink>Loading...</blink>")
+	$.get("/ajax/sources", function(data) {
+	    console.log(data)
+	    $("#sources").html("")
+	    data.forEach(function(source) { insertsource(source)} )
+	    if (callback) {callback(data)}
+	})
+
+    }
+
+
+
+
+    function editsource(source) {
+
+
+	var editdialog = $("#editdialog")
+	console.log(source)
+	if (source) {
+	    $("#title",editdialog).html("edit " + source.name)
+	    $("#data",editdialog).val("Loading...")
+	    $.post("ajax/source",{_id:source._id}, function(data) { source.data = data.data; $("#data",editdialog).val(source.data) })
+	    $("#name",editdialog).val(source.name)
+	} else {
+	    $("#title",editdialog).html("new base")
+	    $("#data",editdialog).val("")
+	    $("#name",editdialog).val("")
+
+	}
+
+	editdialog.show()
+
+	editdialog.dialog({
+	    height:650,
+	    width:700,
+	    modal: true
+	})
+
+	$("#save",editdialog).unbind()
+
+	$("#save",editdialog).click(function(){
+	    data = {}
+	    data.name = $("#name",editdialog).val()
+	    data.data = $("#data",editdialog).val()
+	    
+	    if(source) {
+		data._id = source._id
+	    }
+
+	    $.post("/ajax/writesource", data, function (data) { console.log("GOT",data); reloadsourcelist(function(s) { sources = s }) })
+
+
+	    editdialog.dialog("close")
+
+	})
+    }
+
+
+    $("#editdialog").hide()
+    //    $("#cancel").click(function(){$("#editdialog").hide()})
+    
     $("#cancel").click(function(){$("#editdialog").dialog("close")})
     $("#new").click(function() {editsource()})
 
+//    $("#reg" ).click(function() {  console.log("REGEN"); $.post("/ajax/regenerate", {})})
 
-    $("#generate").click(function() {
+    
+    $("#globalgenerate").click(function() {
 	$("#output").html ("generating...")
-	$.post("/ajax/generate", {lala:1}, function(data) { console.log("GOT",data); $("#output").html(data) })
+
+	req = {}
+
+	sources.forEach(function(source) {
+//	    console.log('working on',source)
+	    req[source._id] = $("#slider-" + source._id).slider('value')
+	})
+	console.log(req)
+
+
+	$.post("/ajax/globalgenerate", {req: JSON.stringify(req)}, function(data) { console.log("GOT",data); $("#output").html(data) })
     })
 
 

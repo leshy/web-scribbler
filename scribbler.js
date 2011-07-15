@@ -4,6 +4,7 @@ function trim(data) {
 
 function extractwords(data) {
     var words = data.replace(/\./g, ' . ')
+//    words = data.replace(/\n/g, ' . ')
     words = words.replace(/\,/g, ' , ')
     words = ". " + words + " ."
 
@@ -48,7 +49,7 @@ function wordid(word,ids)  {
 	if (ids[id] == word) { return parseInt(id) }
     }
     
-    console.log(word)
+//    console.log(word)
     var newid = ids.length
     ids.push(word)
     return newid
@@ -57,7 +58,7 @@ function wordid(word,ids)  {
 function pickone(entry) {
 
     var range = 0
-
+    //console.log('choosing between',entry)
     for (x in entry) {
 	range += entry[x];
     }
@@ -70,11 +71,15 @@ function pickone(entry) {
     }
 }
 
-function sentance(graph,ids) {
+function sentance(ids,graph) {
     var current = 0
     var sentance = ""
+    //console.log(ids)
+    //console.log(graph)
+
     while (true) {
 	current = pickone(graph[current])
+	if (current == undefined) { return "FAIL FEST" }
 	sentance = sentance + " " + ids[current]
 	if (current == 0) { return postprocess(sentance) }
 }}
@@ -120,7 +125,9 @@ function postprocess(sentance) {
 
 module.exports.buildgraph = buildgraph
 module.exports.sentance = sentance
+module.exports.multisentance = multisentance
 
+/*
 data1 = "ivan ide u ducan."
 data2 = "anja ide u skolu. anja ide u ludnicu."
 
@@ -137,6 +144,10 @@ graph2 = ret[0]
 
 //console.log(multisentance([{ graph: graph1, value: 3 }, {graph: graph2, value:1 } ],ids))
 
-console.log(ids)
-console.log(graph1)
-console.log(graph2)
+//console.log(ids)
+//console.log(graph1)
+//console.log(graph2)
+
+console.log(sentance(ids,graph1))
+
+*/
